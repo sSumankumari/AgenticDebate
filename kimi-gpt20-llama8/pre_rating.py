@@ -1,0 +1,1 @@
+# Agent 1 before debate rating
