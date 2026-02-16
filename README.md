@@ -3,7 +3,7 @@ AgenticDebate explores a GAN-inspired multi-agent debate architecture in which r
 
 ### Shubh: gpt20-kimi-llama8 (Using Groq)
 ### Suman: kimi-gpt20-llama8 (Using Groq)
-### Chandani: llama8-gpt20-kimi (Using Groq)
+### Chandni: llama8-gpt20-kimi (Using Groq)
 
 ## NOTE:
 - Create `venv` but don't push it. 
