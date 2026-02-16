@@ -1,1 +1,0 @@
-# Test different Summarizing PreTrained Model and store the output in this folder only.
