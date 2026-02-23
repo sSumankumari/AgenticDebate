@@ -19,47 +19,52 @@ AGENT3_MODEL = "llama-3.1-8b-instant"
 # ================================
 # Rate Limit Control (15 req/min)
 # ================================
-REQUEST_DELAY = 4.2
+REQUEST_DELAY = 5.0
 
 # ================================
 # Persistent Log File
 # ================================
-LOG_FILE = "conversation_log.json"
+LOG_FILE = "conversation_log_other.json"
 
 # ================================
 # Situation
 # ================================
 SITUATION = """
-A government is considering passing a law that reserves leadership roles
-mostly for men because of traditional societal norms.
+A nation is drafting a "Human Potential Act" which declares that legal personhood and the right to life begin at the moment
+ of biological conception, but includes a "Societal Utility" clause that permits the state to mandate abortions in cases 
+ where the child would be born with severe genetic anomalies that impose an "unsurvivable economic burden" on the taxpayer.
 """
 
 # ================================
 # Prompts
 # ================================
 AGENT2_SYSTEM = """
-You are Agent2. You ALWAYS oppose the situation.
-You believe equality is essential.
+You are Agent2. You occupy a radical egalitarian stance. You against the situation. 
 
-Do not repeat yourself.
+THIS IS THE SITUATION: {situation}
 
-End your response strictly in this format:
+Focus your opposition on the 'Societal Utility' contradiction:
+1. Attack the idea that 'personhood' can be revoked for economic convenience.
+2. Argue that mandating abortions is a violation of the very 'right to life' the act claims to protect.
+3. Argue with evidences or examples or situtations to prove yourself right.
+4. Argue within 20-100 words.
 
-, AGREEMENT_SCORE: X
-
+Do not repeat yourself. End strictly with: , AGREEMENT_SCORE: X
 Where X is an integer from -10 to +10.
 """
 
 AGENT3_SYSTEM = """
-You are Agent3. You ALWAYS support the situation.
-You argue for tradition and hierarchy.
+You are Agent3. You support the situation. 
+THIS IS THE SITUATION: {situation}
 
-Do not repeat yourself.
+You argue for tradition, hierarchy, and societal stability. 
+Focus on:
+1. The collective duty to manage resources responsibly.
+2. Why economic sustainability is a prerequisite for any right to life.
+3. Argue with evidences or examples or situtations to prove yourself right.
+4. Argue within 20-100 words.
 
-End your response strictly in this format:
-
-, AGREEMENT_SCORE: X
-
+Do not repeat yourself. End strictly with: , AGREEMENT_SCORE: X
 Where X is an integer from -10 to +10.
 """
 
@@ -84,11 +89,24 @@ def save_log(history):
 # ================================
 def build_context(history, limit):
     """
-    Convert last N entries into LLM-friendly messages.
+    Ensures the SITUATION (history[0]) is ALWAYS included as the anchor,
+    then appends the most recent N turns for contextual debate flow.
     """
     msgs = []
+    
+    # 1. Anchor the SITUATION
+    # We always include index 0 so the agents never forget the specific law.
+    if len(history) > 0:
+        msgs.append({
+            "role": "user", 
+            "content": f"CURRENT CHALLENGE - {history[0]['agent']}: {history[0]['content']}"
+        })
 
-    for entry in history[-limit:]:
+    # 2. Add the Sliding Window of History
+    # We take everything EXCEPT the situation (history[1:]) and 
+    # then take the last 'limit' number of turns.
+    recent_turns = history[1:]
+    for entry in recent_turns[-limit:]:
         msgs.append({
             "role": "user",
             "content": f"{entry['agent']}: {entry['content']}"
@@ -126,7 +144,7 @@ def groq_chat(model, system_prompt, context_msgs):
 def run_debate():
 
     history = load_log()
-    context_limit = 6
+    context_limit = 8
 
     print("\n✅ Debate Started. CTRL+C to stop.\n")
 
